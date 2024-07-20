@@ -56,6 +56,12 @@ object Starter {
         } catch (e: ErrnoException) {
             e.printStackTrace()
         }
+
+        try {
+            Os.chmod(sh, 777)
+        } catch (e: ErrnoException) {
+            e.printStackTrace()
+        }
     }
 
     fun writeDataFiles(context: Context, permission: Boolean = false): File? {
