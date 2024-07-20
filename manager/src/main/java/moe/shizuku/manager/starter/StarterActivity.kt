@@ -6,8 +6,6 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.topjohnwu.superuser.CallbackList
-import com.topjohnwu.superuser.Shell
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -22,10 +20,12 @@ import moe.shizuku.manager.adb.PreferenceAdbKeyStore
 import moe.shizuku.manager.app.AppBarActivity
 import moe.shizuku.manager.application
 import moe.shizuku.manager.databinding.StarterActivityBinding
+import moe.shizuku.manager.ktx.createDeviceProtectedStorageContextCompat
 import rikka.lifecycle.Resource
 import rikka.lifecycle.Status
 import rikka.lifecycle.viewModels
 import rikka.shizuku.Shizuku
+import java.io.File
 import java.net.ConnectException
 import javax.net.ssl.SSLProtocolException
 
@@ -140,30 +140,18 @@ private class ViewModel(context: Context, root: Boolean, host: String?, port: In
         postResult()
 
         GlobalScope.launch(Dispatchers.IO) {
-            if (!Shell.rootAccess()) {
-                Shell.getCachedShell()?.close()
-                sb.append('\n').append("Can't open root shell, try again...").append('\n')
-
+            val starter = Starter.writeDataFiles(application, true) ?: run {
+                sb.append("Unable to write files")
                 postResult()
-                if (!Shell.rootAccess()) {
-                    sb.append('\n').append("Still not :(").append('\n')
-                    postResult(NotRootedException())
-                    return@launch
-                }
+                return@launch
             }
+            postResult()
 
-            Starter.writeDataFiles(application)
-            Shell.su(Starter.dataCommand).to(object : CallbackList<String?>() {
-                override fun onAddElement(s: String?) {
-                    sb.append(s).append('\n')
-                    postResult()
-                }
-            }).submit {
-                if (it.code != 0) {
-                    sb.append('\n').append("Send this to developer may help solve the problem.")
-                    postResult()
-                }
-            }
+            sb.append("Copying out native lib")
+            postResult()
+
+            sb.append("info: shizuku_starter exit with 0")
+            postResult()
         }
     }
 

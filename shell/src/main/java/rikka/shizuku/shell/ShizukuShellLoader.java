@@ -96,11 +96,18 @@ public class ShizukuShellLoader {
     }
 
     private static void onBinderReceived(IBinder binder, String sourceDir) {
+        String trimmedAbi = Build.SUPPORTED_ABIS[0];
+        int index = trimmedAbi.indexOf("-");
+
+        if (index != -1) {
+            trimmedAbi = trimmedAbi.substring(0, index);
+        }
         String librarySearchPath = sourceDir + "!/lib/" + Build.SUPPORTED_ABIS[0];
         String systemLibrarySearchPath = System.getProperty("java.library.path");
         if (!TextUtils.isEmpty(systemLibrarySearchPath)) {
             librarySearchPath += File.pathSeparatorChar + systemLibrarySearchPath;
         }
+        librarySearchPath += File.pathSeparatorChar + sourceDir.replace("/base.apk", "") + "/lib/" + trimmedAbi;
         String optimizedDirectory = ".";
         File optimizedDirectoryFile = new File(optimizedDirectory);
         if (!optimizedDirectoryFile.exists() || !optimizedDirectoryFile.isDirectory()  || !optimizedDirectoryFile.canWrite() || !optimizedDirectoryFile.canExecute()) {
