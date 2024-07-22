@@ -194,6 +194,13 @@ void startReverseShell(int port) {
         return;
     }
 
+    int opt = 1;
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
+        LOGE("Failed to set socket options");
+        close(server_fd);
+        return;
+    }
+
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     server_addr.sin_port = htons(port);
