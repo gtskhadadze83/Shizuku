@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Build
 import android.os.UserManager
 import android.system.ErrnoException
-import android.system.Os
 import moe.shizuku.manager.R
 import moe.shizuku.manager.application
 import moe.shizuku.manager.ktx.createDeviceProtectedStorageContextCompat
@@ -46,19 +45,19 @@ object Starter {
         logd(commandInternal[1]!!)
 
         try {
-            Os.chmod(dir.absolutePath, 777)
+            Runtime.getRuntime().exec("chmod 777 ${dir.absolutePath}").waitFor()
         } catch (e: ErrnoException) {
                 e.printStackTrace()
         }
 
         try {
-            Os.chmod(starter, 777)
+            Runtime.getRuntime().exec("chmod 777 $starter").waitFor()
         } catch (e: ErrnoException) {
             e.printStackTrace()
         }
 
         try {
-            Os.chmod(sh, 777)
+            Runtime.getRuntime().exec("chmod 777 $sh").waitFor()
         } catch (e: ErrnoException) {
             e.printStackTrace()
         }
