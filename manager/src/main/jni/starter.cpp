@@ -379,41 +379,47 @@ static main_func applet_main[] = {starter_main, nullptr};
 
 static int fork_daemon(int returnParent) {
     pid_t child = fork();
-    if (child == 0) { // 1st child
-        close(STDIN_FILENO);
-        close(STDOUT_FILENO);
-        close(STDERR_FILENO);
-
-        int devNull = open("/dev/null", O_RDWR);
-        redirectStd(devNull);
-        close(devNull);
-
-        setsid();
-        pid_t child2 = fork();
-        if (child2 == 0) { // 2nd child
-            return 0; // return execution to caller
-        } else if (child2 > 0) { // 1st child, fork ok
-            exit(EXIT_SUCCESS);
-        } else if (child2 < 0) { // 1st child, fork fail
-            LOGE("2nd fork failed (%d)", errno);
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    // parent
     if (child < 0) {
         LOGE("1st fork failed (%d)", errno);
-        return -1; // error on 1st fork
+        return -1;
     }
-    while (true) {
+
+    if (child > 0) {
         int status;
         pid_t waited = waitpid(child, &status, 0);
-        if ((waited == child) && WIFEXITED(status)) {
-            break;
+        if (waited == child && WIFEXITED(status)) {
+            if (!returnParent)
+                exit(EXIT_SUCCESS);
         }
+        return -1;
     }
-    if (!returnParent) exit(EXIT_SUCCESS);
-    return 1; // success parent
+
+    // First child
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+
+    int devNull = open("/dev/null", O_RDWR);
+    redirectStd(devNull);
+    close(devNull);
+
+    if (setsid() < 0) {
+        LOGE("setsid failed (%d)", errno);
+        exit(EXIT_FAILURE);
+    }
+
+    child = fork();
+    if (child < 0) {
+        LOGE("2nd fork failed (%d)", errno);
+        exit(EXIT_FAILURE);
+    }
+
+    if (child > 0) {
+        exit(EXIT_SUCCESS);
+    }
+
+    // Second child
+    return 0;
 }
 
 int main(int argc, char **argv) {
