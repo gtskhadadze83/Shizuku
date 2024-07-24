@@ -7,6 +7,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(C_FLAGS "-Werror=format -fdata-sections -ffunction-sections -fno-exceptions -fno-rtti -fno-threadsafe-statics")
 set(LINKER_FLAGS "-Wl,--hash-style=both")
 
+if (${FLAVOR} STREQUAL "DEV")
+    message("Building dev flavor...")
+    add_definitions(-DDEVFLAVOR=1)
+else()
+    message("Building user flavor...")
+endif()
+
 if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("Builing Release...")
 

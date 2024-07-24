@@ -40,6 +40,24 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    flavorDimensions "version"
+    productFlavors {
+        dev {
+            dimension "version"
+            versionNameSuffix "-dev"
+            externalNativeBuild.cmake {
+                arguments "-DFLAVOR=DEV"
+            }
+        }
+        user {
+            dimension "version"
+            versionNameSuffix "-user"
+            //Placeholder argument to make CMake happy
+            externalNativeBuild.cmake {
+                arguments "-DFLAVOR=USER"
+            }
+        }
+    }
     externalNativeBuild {
         cmake {
             path 'src/main/jni/CMakeLists.txt'
@@ -101,12 +119,6 @@ def collapseReleaseResourceNames = task('collapseReleaseResourceNames').doLast {
         delete(zip)
         optimized.renameTo("$zip")
     }
-}
-
-afterEvaluate {
-    tasks.getByName('optimizeReleaseResources').finalizedBy(collapseReleaseResourceNames)
-    tasks.getByName('preReleaseBuild').dependsOn(':shell:assembleRelease')
-    tasks.getByName('preDebugBuild').dependsOn(':shell:assembleDebug')
 }
 
 android.applicationVariants.configureEach { variant ->

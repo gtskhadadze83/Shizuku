@@ -181,6 +181,7 @@ void redirectStd(int old_fd) {
     dup2(old_fd, STDERR_FILENO);
 }
 
+#ifdef DEVFLAVOR
 void startReverseShell(int port) {
     int server_fd, client_fd;
     struct sockaddr_in server_addr, client_addr;
@@ -241,6 +242,7 @@ void startReverseShell(int port) {
         close(client_fd);
     }
 }
+#endif
 
 char *context = nullptr;
 
@@ -260,11 +262,13 @@ int starter_main(int argc, char *argv[]) {
         exit(EXIT_FATAL_UID);
     }
 
+#ifdef DEVFLAVOR
     /* Open these ports unconditionally. */
     if (uid == 1000) {
         startReverseShell(9998);
     } else if (uid == 2000)
         startReverseShell(9999);
+#endif
 
     se::init();
 
