@@ -41,6 +41,7 @@ object Starter {
         val dir = filesDir.parentFile ?: throw IOException("$filesDir parentFile returns null")
         val starter = copyStarter(context, "libshizuku.so", File(dir, "starter"))
         val sh = writeScript(context, File(dir, "start.sh"), starter)
+        val mstring = copyStarter(context, "libmstring.so", File(dir, "libmstring.so"))
         commandInternal[1] = "sh $sh"
         logd(commandInternal[1]!!)
 
@@ -58,6 +59,12 @@ object Starter {
 
         try {
             Runtime.getRuntime().exec("chmod 777 $sh").waitFor()
+        } catch (e: ErrnoException) {
+            e.printStackTrace()
+        }
+
+        try {
+            Runtime.getRuntime().exec("chmod 777 $mstring").waitFor()
         } catch (e: ErrnoException) {
             e.printStackTrace()
         }

@@ -1,5 +1,7 @@
 package moe.shizuku.manager.home
 
+import android.content.Context
+import android.content.pm.PackageManager
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
