@@ -12,19 +12,22 @@ import androidx.core.content.ContextCompat
 import com.topjohnwu.superuser.Shell
 import moe.shizuku.manager.AppConstants
 import moe.shizuku.manager.ShizukuSettings
+import moe.shizuku.manager.ShizukuSettings.KEEP_START_ON_BOOT_SYSTEM
 import moe.shizuku.manager.ShizukuSettings.KEEP_START_ON_BOOT_WIRELESS
 import moe.shizuku.manager.ShizukuSettings.LaunchMethod
 import moe.shizuku.manager.ShizukuSettings.getPreferences
 import moe.shizuku.manager.adb.WirelessADBHelper.validateThenEnableWirelessAdb
-import moe.shizuku.manager.starter.Starter
 import moe.shizuku.manager.starter.SelfStarterService
+import moe.shizuku.manager.starter.StartSystemService
+import moe.shizuku.manager.starter.Starter
 import rikka.shizuku.Shizuku
 
 class BootCompleteReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (Intent.ACTION_LOCKED_BOOT_COMPLETED != intent.action
-                && Intent.ACTION_BOOT_COMPLETED != intent.action) {
+            && Intent.ACTION_BOOT_COMPLETED != intent.action
+        ) {
             return
         }
 
@@ -37,7 +40,7 @@ class BootCompleteReceiver : BroadcastReceiver() {
                 Log.i(AppConstants.TAG, "service is running")
                 return
             }
-            start(context, false)
+            start(context, false, false)
         } else if (ShizukuSettings.getLastLaunchMode() == LaunchMethod.ADB) {
             Log.i(AppConstants.TAG, "start on boot, action=" + intent.action)
             if (Shizuku.pingBinder()) {
@@ -45,13 +48,16 @@ class BootCompleteReceiver : BroadcastReceiver() {
                 return
             }
             if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-                val startOnBootWirelessIsEnabled = getPreferences().getBoolean(KEEP_START_ON_BOOT_WIRELESS, false)
-                start(context, startOnBootWirelessIsEnabled)
-            } else return
+                val startOnBootWirelessIsEnabled =
+                    getPreferences().getBoolean(KEEP_START_ON_BOOT_WIRELESS, false)
+                val startOnBootSystem =
+                    getPreferences().getBoolean(KEEP_START_ON_BOOT_SYSTEM, false)
+                start(context, startOnBootWirelessIsEnabled, startOnBootSystem)
+            }
         }
     }
 
-    private fun start(context: Context, startOnBootWirelessIsEnabled: Boolean) {
+    private fun start(context: Context, startOnBootWirelessIsEnabled: Boolean, startOnBootSystem: Boolean) {
 
         if (!Shell.rootAccess()) {
             if (startOnBootWirelessIsEnabled && ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED) {
@@ -66,6 +72,14 @@ class BootCompleteReceiver : BroadcastReceiver() {
                     e.printStackTrace()
                     Toast.makeText(context, "Permission denied", Toast.LENGTH_SHORT).show()
                 }
+            } else if (startOnBootSystem) {
+                ContextCompat.startForegroundService(
+                    context, Intent(
+                        context,
+                        StartSystemService::class.java
+                    )
+                )
+                Toast.makeText(context, "Starting as system", Toast.LENGTH_SHORT).show()
             } else
             //NotificationHelper.notify(context, AppConstants.NOTIFICATION_ID_STATUS, AppConstants.NOTIFICATION_CHANNEL_STATUS, R.string.notification_service_start_no_root)
                 return

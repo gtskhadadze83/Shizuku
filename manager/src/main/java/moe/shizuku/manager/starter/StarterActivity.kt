@@ -1,8 +1,6 @@
 package moe.shizuku.manager.starter
 
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.lifecycle.LiveData
@@ -24,12 +22,14 @@ import moe.shizuku.manager.adb.PreferenceAdbKeyStore
 import moe.shizuku.manager.app.AppBarActivity
 import moe.shizuku.manager.application
 import moe.shizuku.manager.databinding.StarterActivityBinding
+import moe.shizuku.manager.utils.SystemHelper.startSystem
 import rikka.lifecycle.Resource
 import rikka.lifecycle.Status
 import rikka.lifecycle.viewModels
 import rikka.shizuku.Shizuku
 import java.net.ConnectException
 import javax.net.ssl.SSLProtocolException
+
 
 private class NotRootedException : Exception()
 
@@ -176,33 +176,16 @@ private class ViewModel(context: Context, root: Boolean, isSystem: Boolean, host
         sb.append("Starting with system...").append('\n').append('\n')
         postResult()
 
-        GlobalScope.launch(Dispatchers.IO) {
-            val intent = Intent().apply {
-                setClassName("com.sdet.fotaagent", "com.sdet.fotaagent.Main")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            application.applicationContext.startActivity(intent)
+        try {
+            startSystem()
+            sb.append("Start system success!").append('\n').append('\n')
+            postResult()
 
-            val mIntent = Intent("com.sdet.fotaagent.intent.CP_FILE")
-            mIntent.putExtra("CP_FILE", "/data")
-            mIntent.putExtra("CP_LOC", "; " + application.applicationInfo.nativeLibraryDir
-                    + "/libshizuku.so" + "; am force-stop com.sdet.fotaagent")
-            try {
-                Thread.sleep(1000)
-                application.applicationContext.sendBroadcast(mIntent)
-                sb.append("Start system success!").append('\n').append('\n')
-                postResult()
-
-                sb.append("info: shizuku_starter exit with 0")
-                postResult()
-
-                return@launch
-            } catch (e: InterruptedException) {
-                e.printStackTrace()
-                sb.append("Start system failed!").append('\n')
-                postResult()
-                return@launch
-            }
+            sb.append("info: shizuku_starter exit with 0")
+            postResult()
+        } catch (ignored: InterruptedException) {
+            sb.append("Start system failed!").append('\n')
+            postResult()
         }
     }
 

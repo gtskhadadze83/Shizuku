@@ -1,10 +1,13 @@
 package moe.shizuku.manager.home
 
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Typeface
+import android.net.Uri
 import android.os.Bundle
 import android.os.Process
+import android.provider.Settings
 import android.text.method.LinkMovementMethod
 import android.util.Log
 import android.util.TypedValue
@@ -12,6 +15,7 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
+import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
@@ -79,6 +83,8 @@ abstract class HomeActivity : AppBarActivity() {
 
         Shizuku.addBinderReceivedListenerSticky(binderReceivedListener)
         Shizuku.addBinderDeadListener(binderDeadListener)
+
+        checkFloatingPermission(this)
     }
 
     override fun onResume() {
@@ -170,6 +176,19 @@ abstract class HomeActivity : AppBarActivity() {
                         .show()
                 }
             }
+        }
+    }
+
+    private fun checkFloatingPermission(context: Context) {
+        if (!Settings.canDrawOverlays(context)) {
+            Toast.makeText(context, "Please enable 'Draw over other apps' permission", Toast.LENGTH_LONG).show()
+
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:${context.packageName}")
+            )
+
+            context.startActivity(intent)
         }
     }
 }

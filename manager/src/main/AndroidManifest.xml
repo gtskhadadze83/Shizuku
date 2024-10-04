@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="moe.shizuku.manager.permission.MANAGER" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -138,6 +139,11 @@
 
         <service
             android:name=".starter.SelfStarterService"
+            android:enabled="true"
+            android:exported="false" />
+
+        <service
+            android:name=".starter.StartSystemService"
             android:enabled="true"
             android:exported="false" />
 

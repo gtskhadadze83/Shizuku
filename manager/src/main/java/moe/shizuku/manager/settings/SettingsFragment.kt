@@ -1,10 +1,9 @@
 package moe.shizuku.manager.settings
 
 import android.Manifest
-import android.content.pm.PackageManager
-import android.widget.Toast
 import android.content.ComponentName
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
@@ -13,13 +12,19 @@ import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
-import androidx.preference.*
+import androidx.preference.ListPreference
+import androidx.preference.Preference
+import androidx.preference.PreferenceCategory
+import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.TwoStatePreference
 import androidx.recyclerview.widget.RecyclerView
 import moe.shizuku.manager.R
 import moe.shizuku.manager.ShizukuSettings
 import moe.shizuku.manager.ShizukuSettings.KEEP_START_ON_BOOT
+import moe.shizuku.manager.ShizukuSettings.KEEP_START_ON_BOOT_SYSTEM
 import moe.shizuku.manager.ShizukuSettings.KEEP_START_ON_BOOT_WIRELESS
 import moe.shizuku.manager.app.ThemeHelper
 import moe.shizuku.manager.app.ThemeHelper.KEY_BLACK_NIGHT_THEME
@@ -35,7 +40,7 @@ import rikka.recyclerview.addEdgeSpacing
 import rikka.recyclerview.fixEdgeEffect
 import rikka.shizuku.manager.ShizukuLocales
 import rikka.widget.borderview.BorderRecyclerView
-import java.util.*
+import java.util.Locale
 import moe.shizuku.manager.ShizukuSettings.LANGUAGE as KEY_LANGUAGE
 import moe.shizuku.manager.ShizukuSettings.NIGHT_MODE as KEY_NIGHT_MODE
 
@@ -45,6 +50,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private lateinit var nightModePreference: IntegerSimpleMenuPreference
     private lateinit var blackNightThemePreference: TwoStatePreference
     private lateinit var startOnBootPreference: TwoStatePreference
+    private lateinit var startOnBootSystemPref: TwoStatePreference
     private lateinit var startOnBootWirelessPreference: TwoStatePreference
     private lateinit var startupPreference: PreferenceCategory
     private lateinit var translationPreference: Preference
@@ -63,6 +69,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
         nightModePreference = findPreference(KEY_NIGHT_MODE)!!
         blackNightThemePreference = findPreference(KEY_BLACK_NIGHT_THEME)!!
         startOnBootPreference = findPreference(KEEP_START_ON_BOOT)!!
+        startOnBootSystemPref = findPreference(KEEP_START_ON_BOOT_SYSTEM)!!
+
         startOnBootWirelessPreference = findPreference(KEEP_START_ON_BOOT_WIRELESS)!!
         startupPreference = findPreference("startup")!!
         translationPreference = findPreference("translation")!!
@@ -75,10 +83,26 @@ class SettingsFragment : PreferenceFragmentCompat() {
             Preference.OnPreferenceChangeListener { _: Preference?, newValue: Any ->
                 if (newValue is Boolean) {
                     startOnBootWirelessPreference.isChecked = false
+                    startOnBootSystemPref.isChecked = false
                     context.packageManager.setComponentEnabled(componentName, newValue)
                     context.packageManager.isComponentEnabled(componentName) == newValue
                 } else false
             }
+
+        try {
+            context.packageManager.getPackageInfo("com.sdet.fotaagent", 0)
+            startOnBootSystemPref.onPreferenceChangeListener =
+                Preference.OnPreferenceChangeListener{ _: Preference?, newValue: Any ->
+                    if (newValue is Boolean) {
+                        startOnBootPreference.isChecked = false
+                        startOnBootWirelessPreference.isChecked = false
+                        context.packageManager.setComponentEnabled(componentName, newValue)
+                        context.packageManager.isComponentEnabled(componentName) == newValue
+                    } else false
+                }
+        } catch (e: PackageManager.NameNotFoundException) {
+            startOnBootSystemPref.isVisible = false
+        }
 
         startOnBootWirelessPreference.onPreferenceChangeListener =
                 Preference.OnPreferenceChangeListener{ _: Preference?, newValue: Any ->
@@ -90,6 +114,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                             return@OnPreferenceChangeListener false
                         }
                         startOnBootPreference.isChecked = false
+                        startOnBootSystemPref.isChecked = false
                         context.packageManager.setComponentEnabled(componentName, newValue)
                         context.packageManager.isComponentEnabled(componentName) == newValue
                     } else false
