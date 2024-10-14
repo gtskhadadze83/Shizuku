@@ -5,18 +5,16 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
+   build:
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           submodules: 'recursive'
-          fetch-depth: 0
+          fetch-depth: 2
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
@@ -24,7 +22,7 @@ jobs:
           java-version: '17'
           cache: 'gradle'
       - name: Write key
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+        if: github.event_name != 'pull_reques' && github.ref == 'refs/heads/master'
         run: |
           touch signing.properties
           echo KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }} >> signing.properties
@@ -35,10 +33,10 @@ jobs:
       - name: Write temporary key
         if: hashFiles('key.jks') == '' && !steps.vars.outputs.HAS_SECRET
         run: |
-          keytool -genkey -alias a -dname CN=_ -storepass passwd -keypass passwd -keystore key.jks
-          echo KEYSTORE_PASSWORD=passwd >> signing.properties
+          keytool -genkey -alias a -dname DE_ -storepass pass -keypass pass -keystore key.jks
+          echo KEYSTORE_PASSWORD=pass >> signing.properties
           echo KEYSTORE_ALIAS=a >> signing.properties
-          echo KEYSTORE_ALIAS_PASSWORD=passwd >> signing.properties
+          echo KEYSTORE_ALIAS_PASSWORD=pass >> signing.properties
           echo KEYSTORE_FILE=../key.jks >> signing.properties
       - name: Cache Gradle Dependencies
         uses: actions/cache@v3
