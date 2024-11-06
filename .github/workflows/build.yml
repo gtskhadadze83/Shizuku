@@ -28,7 +28,7 @@ jobs:
       - name: Write temporary key
         if: hashFiles('key.jks') == '' && !steps.vars.outputs.HAS_SECRET
         run: |
-          keytool -genkey -alias a -dname CN=_ -storepass passwd -keypass passwd -keystore key.jks
+          keytool -v -genkey -alias a -dname CN=_ -storepass passwd -keypass passwd -keyalg RSA -keysize 2048 -keystore key.jks
           echo KEYSTORE_PASSWORD=passwd >> signing.properties
           echo KEYSTORE_ALIAS=a >> signing.properties
           echo KEYSTORE_ALIAS_PASSWORD=passwd >> signing.properties
