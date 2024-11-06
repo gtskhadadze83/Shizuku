@@ -69,7 +69,7 @@ android {
     packagingOptions {
         jniLibs {
             excludes += ['/kotlin/**']
-            useLegacyPackaging false
+            useLegacyPackaging true
         }
         resources {
             excludes += ['/META-INF/*.version', '/META-INF/*.kotlin_module', '/kotlin/**']
@@ -79,7 +79,7 @@ android {
         includeInApk false
     }
     lint {
-        checkReleaseBuilds false
+        checkReleaseBuilds true
     }
 }
 
