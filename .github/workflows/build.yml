@@ -60,7 +60,7 @@ jobs:
           echo 'org.gradle.vfs.watch=true' >> gradle.properties
           echo 'org.gradle.jvmargs=-Xmx2048m' >> gradle.properties
           ./gradlew :manager:assembleRelease
-          releaseName="Shizuku" && echo "releaseName=$releaseName" >> $GITHUB_OUTPUT
+           releaseName=`ls manager/build/outputs/apk/user/release/shizuku*-v*-user-userRelease.apk | awk -F '(/|.apk)' '{print $6}'` && echo "releaseName=$releaseName" >> $GITHUB_OUTPUT
       - name: Upload release
         if: success()
         uses: actions/upload-artifact@v4
