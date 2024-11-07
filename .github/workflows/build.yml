@@ -33,7 +33,7 @@ jobs:
           echo KEYSTORE_ALIAS=a >> signing.properties
           echo KEYSTORE_ALIAS_PASSWORD=passwd >> signing.properties
           echo KEYSTORE_FILE=../key.jks >> signing.properties
-          keytool -v -list storepass passwd -keystore key.jks
+          keytool -v -list -storepass passwd -keystore key.jks
       - name: Cache Gradle Dependencies
         uses: actions/cache@v4
         with:
