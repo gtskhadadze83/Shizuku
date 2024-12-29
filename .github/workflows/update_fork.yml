@@ -11,13 +11,13 @@ permissions:
 
 jobs:
   update_fork:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout Forked Repo
         uses: actions/checkout@v4
         with:
-          repository: pixincreate/Shizuku
+          repository: pascua28/Shizuku
           ref: master
           fetch-depth: "0"
           submodules: true
