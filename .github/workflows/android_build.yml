@@ -21,10 +21,8 @@ jobs:
       - name: Checkout Forked Repo
         uses: actions/checkout@v4
         with:
-          repository: pixincreate/Shizuku
-          ref: master
+          submodules: 'recursive'
           fetch-depth: 0
-          submodules: true
 
       - name: Setup Keystore File
         run: |
